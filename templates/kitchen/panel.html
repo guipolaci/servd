@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Cozinha — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<h1>Cozinha — {{ restaurant.name }}</h1>
+
+{% for order in orders %}
+    <div>
+        <h2>Pedido #{{ order.pk }} — Mesa {{ order.table.number }}</h2>
+        <p>Status: {{ order.get_status_display }}</p>
+
+        {% for item in order.items.all %}
+            <p>{{ item.quantity }}x {{ item.product.name }}</p>
+        {% endfor %}
+
+        {% if order.notes %}
+            <p>Obs: {{ order.notes }}</p>
+        {% endif %}
+    </div>
+
+{% empty %}
+    <p>Nenhum pedido ativo no momento.</p>
+{% endfor %}
+
+{% endblock %}

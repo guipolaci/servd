@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}{{ restaurant.name }} — Cardápio{% endblock %}
+
+{% block content %}
+<h1>{{ restaurant.name }}</h1>
+<p>Mesa {{ table_number }}</p>
+
+{% for category in categories %}
+    <h2>{{ category.name }}</h2>
+
+    {% for product in category.products.all %}
+        <div>
+            <strong>{{ product.name }}</strong>
+            <p>{{ product.description }}</p>
+            <p>R$ {{ product.price }}</p>
+        </div>
+    {% endfor %}
+
+{% empty %}
+    <p>Nenhum item disponível no momento.</p>
+{% endfor %}
+
+{% endblock %}

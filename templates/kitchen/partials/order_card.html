@@ -1,0 +1,8 @@
+<div>
+    <h2>Pedido #{{ order.pk }} — Mesa {{ order.table.number }}</h2>
+    <p>Status: {{ order.get_status_display }}</p>
+
+    {% for item in order.items.all %}
+        <p>{{ item.quantity }}x {{ item.product.name }}</p>
+    {% endfor %}
+</div>
