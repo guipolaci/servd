@@ -1,0 +1,45 @@
+version: "3.9"
+
+# Services são os containers que o compose vai gerenciar
+# Cada service é uma aplicação independente
+services:
+
+  db:
+    # Imagem oficial do PostgreSQL versão 16
+    # O Docker baixa essa imagem do Docker Hub automaticamente
+    image: postgres:16
+
+    # Sempre reinicia se o container cair
+    restart: always
+
+    # Variáveis de ambiente passadas para o container
+    # O PostgreSQL usa essas variáveis para criar o banco na primeira vez
+    environment:
+      POSTGRES_DB: servd
+      POSTGRES_USER: servd
+      POSTGRES_PASSWORD: servd
+
+    # Port mapping: porta_do_seu_computador:porta_do_container
+    # Isso permite que o Django acesse o PostgreSQL em localhost:5432
+    ports:
+      - "5432:5432"
+
+    # Volume — persiste os dados fora do container
+    # Sem isso, toda vez que o container reiniciar os dados somem
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    # Imagem oficial do Redis — alpine é uma versão mais leve
+    image: redis:7-alpine
+
+    restart: always
+
+    # Redis roda na porta 6379 por padrão
+    ports:
+      - "6379:6379"
+
+# Define os volumes usados pelos services
+# O Docker gerencia onde esses dados ficam no seu sistema
+volumes:
+  postgres_data:

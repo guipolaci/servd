@@ -23,7 +23,10 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 
-THIRD_PARTY_APPS = []
+THIRD_PARTY_APPS = [
+    "daphne",
+    "channels",
+]
 
 LOCAL_APPS = [
     "apps.accounts",
@@ -91,3 +94,18 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Diz ao Django para usar nosso User em vez do padrão
 AUTH_USER_MODEL = "accounts.User"
+
+# Troca o WSGI pelo ASGI — necessário para WebSocket
+ASGI_APPLICATION = "config.asgi.application"
+
+# Channel Layer usando Redis como backend
+# É o intermediário que permite views HTTP enviarem
+# mensagens para consumers WebSocket
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [env("REDIS_URL", default="redis://localhost:6379/0")],
+        },
+    },
+}
