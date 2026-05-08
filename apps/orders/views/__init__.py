@@ -2,12 +2,12 @@ import json
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-
 from apps.menu.selectors import get_menu
 from apps.orders.selectors import get_active_orders, get_order_by_id
 from apps.orders.services import create_order, update_order_status
 from apps.orders.selectors import get_table
 from django.http import Http404
+from apps.accounts.decorators import kitchen_required, login_required
 
 # ─────────────────────────────────────────
 # PÚBLICO — acessado pelo cliente via QR Code
@@ -72,6 +72,7 @@ def order_tracking_view(request, slug, order_id):
 # COZINHA — acessado pelo staff
 # ─────────────────────────────────────────
 
+@kitchen_required
 def kitchen_view(request, slug):
     """
     Painel da cozinha.
@@ -86,6 +87,7 @@ def kitchen_view(request, slug):
 
 
 @require_POST
+@kitchen_required
 def update_order_status_view(request, slug, order_id):
     """
     Cozinha avança o status do pedido.
