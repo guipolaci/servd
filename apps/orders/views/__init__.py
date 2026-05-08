@@ -6,7 +6,8 @@ from django.views.decorators.http import require_POST
 from apps.menu.selectors import get_menu
 from apps.orders.selectors import get_active_orders, get_order_by_id
 from apps.orders.services import create_order, update_order_status
-
+from apps.orders.selectors import get_table
+from django.http import Http404
 
 # ─────────────────────────────────────────
 # PÚBLICO — acessado pelo cliente via QR Code
@@ -14,18 +15,23 @@ from apps.orders.services import create_order, update_order_status
 
 def menu_view(request, slug, table_number):
     """
-    Página principal do cardápio.
-    O cliente cai aqui quando escaneia o QR Code da mesa.
-    request.restaurant já está resolvido pelo TenantMiddleware.
+    Antes de mostrar o cardápio, valida que a mesa existe
+    e pertence ao restaurante. Se não existir, retorna 404.
     """
+
+    try:
+        table = get_table(request.restaurant, table_number)
+    except Exception:
+        raise Http404("Mesa não encontrada.")
+
     categories = get_menu(request.restaurant)
 
     return render(request, "public/menu.html", {
         "categories": categories,
         "table_number": table_number,
+        "table": table,
         "restaurant": request.restaurant,
     })
-
 
 @require_POST
 def place_order_view(request, slug, table_number):

@@ -15,6 +15,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 # Separamos os apps em três grupos para deixar claro
 # o que é do Django, o que é de terceiros e o que é nosso
 DJANGO_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -24,7 +25,6 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    "daphne",
     "channels",
 ]
 
