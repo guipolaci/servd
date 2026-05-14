@@ -25,6 +25,8 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    "tailwind",
+    "django_browser_reload",
     "channels",
 ]
 
@@ -33,6 +35,7 @@ LOCAL_APPS = [
     "apps.menu",
     "apps.orders",
     "apps.dashboard",
+    "theme",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -85,7 +88,10 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+    BASE_DIR / "theme" / "static",
+]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -109,3 +115,8 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+TAILWIND_APP_NAME = "theme"
+INTERNAL_IPS = ["127.0.0.1"]
+
+STATIC_ROOT = BASE_DIR / "staticfiles"

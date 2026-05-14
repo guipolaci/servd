@@ -4,4 +4,6 @@ from .base import *  # noqa
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
+MIDDLEWARE += ["django_browser_reload.middleware.BrowserReloadMiddleware"]
+
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
