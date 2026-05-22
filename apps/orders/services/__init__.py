@@ -9,7 +9,7 @@ def create_order(
     restaurant: Restaurant,
     table_number: int,
     items: list,
-    notes: str = ""
+    notes: str = "",
 ) -> Order:
     """
     Cria um pedido completo para uma mesa.
@@ -87,7 +87,6 @@ def create_order(
     order.total = total
     order.save(update_fields=["total"])
 
-    _notify_kitchen(order)
     return order
 
 
@@ -106,46 +105,4 @@ def update_order_status(
     order.status = new_status
     order.save(update_fields=["status", "updated_at"])
 
-    _notify_kitchen(order)
-    _notify_customer(order)
     return order
-
-def _notify_kitchen(order):
-    """
-    Envia evento WebSocket para o painel da cozinha.
-    async_to_sync permite chamar código assíncrono
-    de dentro de uma view síncrona.
-    """
-    from channels.layers import get_channel_layer
-    from asgiref.sync import async_to_sync
-
-    channel_layer = get_channel_layer()
-
-    async_to_sync(channel_layer.group_send)(
-        f"kitchen_{order.restaurant.slug}",
-        {
-            # O tipo define qual método do consumer será chamado
-            # "order.update" → chama o método order_update()
-            "type": "order.update",
-            "order_id": order.pk,
-            "status": order.status,
-        }
-    )
-
-
-def _notify_customer(order):
-    """
-    Envia evento WebSocket para o cliente acompanhar o pedido.
-    """
-    from channels.layers import get_channel_layer
-    from asgiref.sync import async_to_sync
-
-    channel_layer = get_channel_layer()
-
-    async_to_sync(channel_layer.group_send)(
-        f"order_{order.pk}",
-        {
-            "type": "order.status",
-            "status": order.status,
-        }
-    )
