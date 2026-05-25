@@ -1,10 +1,213 @@
 {% extends "base.html" %}
 
-{% block title %}Acompanhar pedido{% endblock %}
+{% block title %}Pedido #{{ order.pk }} — {{ restaurant.name }}{% endblock %}
 
 {% block content %}
-<h1>Pedido #{{ order.pk }}</h1>
-<p>Status: {{ order.get_status_display }}</p>
-<p>Mesa: {{ order.table.number }}</p>
-<p>Total: R$ {{ order.total }}</p>
+<div class="min-h-screen bg-canvas">
+
+  <!-- Header -->
+  <header class="bg-canvas/90 backdrop-blur-xl border-b border-white/10">
+    <div class="max-w-sm mx-auto px-4 py-4">
+      <p class="text-xs text-zinc-500 font-medium">{{ restaurant.name }} · Mesa {{ order.table.number }}</p>
+      <h1 class="text-lg font-bold text-white mt-1">Pedido #{{ order.pk }}</h1>
+    </div>
+  </header>
+
+  <main class="max-w-sm mx-auto px-4 py-6 space-y-4">
+
+    <!-- ── Status ─────────────────────────────── -->
+    <div class="card p-5">
+
+      <div class="flex items-center justify-between mb-6">
+        <p class="section-label">Status atual</p>
+        <span id="ws-dot" class="flex items-center gap-2 text-xs text-zinc-600">
+          <span class="w-2 h-2 rounded-full bg-zinc-700"></span>
+          Conectando
+        </span>
+      </div>
+
+      <!-- Timeline -->
+      <ol role="list" aria-label="Progresso do pedido" class="space-y-0">
+
+        <!-- Pendente -->
+        <li class="flex items-start gap-4">
+          <div class="flex flex-col items-center flex-shrink-0">
+            <div id="step-pending"
+              class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm transition-all duration-300
+                {% if order.status == 'pending' %}bg-warning border-warning text-black
+                {% else %}bg-success border-success text-black{% endif %}">
+              {% if order.status == 'pending' %}⏳{% else %}✓{% endif %}
+            </div>
+            <div class="w-px h-8 bg-white/[0.07] my-1.5"></div>
+          </div>
+          <div class="pb-6 pt-2 min-w-0">
+            <p class="text-sm font-medium {% if order.status == 'pending' %}text-amber-400{% else %}text-white{% endif %}">Recebido</p>
+            <p class="text-xs text-zinc-600 mt-0.5">Pedido enviado para a cozinha</p>
+          </div>
+        </li>
+
+        <!-- Preparando -->
+        <li class="flex items-start gap-4">
+          <div class="flex flex-col items-center flex-shrink-0">
+            <div id="step-preparing"
+              class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm transition-all duration-300
+                {% if order.status == 'preparing' %}bg-brand border-brand text-white
+                {% elif order.status in 'ready,delivered' %}bg-success border-success text-black
+                {% else %}border-white/15 text-zinc-600{% endif %}">
+              {% if order.status in 'ready,delivered' %}✓{% elif order.status == 'preparing' %}👨‍🍳{% else %}○{% endif %}
+            </div>
+            <div class="w-px h-8 bg-white/[0.07] my-1.5"></div>
+          </div>
+          <div class="pb-6 pt-2 min-w-0">
+            <p class="text-sm font-medium {% if order.status == 'preparing' %}text-violet-400{% elif order.status in 'ready,delivered' %}text-white{% else %}text-zinc-600{% endif %}">Preparando</p>
+            <p class="text-xs text-zinc-600 mt-0.5">A cozinha está preparando seu pedido</p>
+          </div>
+        </li>
+
+        <!-- Pronto -->
+        <li class="flex items-start gap-4">
+          <div class="flex flex-col items-center flex-shrink-0">
+            <div id="step-ready"
+              class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm transition-all duration-300
+                {% if order.status == 'ready' %}bg-info border-info text-black animate-pulse
+                {% elif order.status == 'delivered' %}bg-success border-success text-black
+                {% else %}border-white/15 text-zinc-600{% endif %}">
+              {% if order.status == 'delivered' %}✓{% elif order.status == 'ready' %}🔔{% else %}○{% endif %}
+            </div>
+            <div class="w-px h-8 bg-white/[0.07] my-1.5"></div>
+          </div>
+          <div class="pb-6 pt-2 min-w-0">
+            <p class="text-sm font-medium {% if order.status == 'ready' %}text-cyan-400{% elif order.status == 'delivered' %}text-white{% else %}text-zinc-600{% endif %}">Pronto para retirada</p>
+            <p class="text-xs text-zinc-600 mt-0.5">Seu pedido está pronto!</p>
+          </div>
+        </li>
+
+        <!-- Entregue -->
+        <li class="flex items-start gap-4">
+          <div class="flex-shrink-0">
+            <div id="step-delivered"
+              class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm transition-all duration-300
+                {% if order.status == 'delivered' %}bg-success border-success text-black
+                {% else %}border-white/15 text-zinc-600{% endif %}">
+              {% if order.status == 'delivered' %}✓{% else %}○{% endif %}
+            </div>
+          </div>
+          <div class="pt-2 min-w-0">
+            <p class="text-sm font-medium {% if order.status == 'delivered' %}text-green-400{% else %}text-zinc-600{% endif %}">Entregue</p>
+            <p class="text-xs text-zinc-600 mt-0.5">Bom apetite! 🍽️</p>
+          </div>
+        </li>
+
+      </ol>
+    </div>
+
+    <!-- ── Resumo ─────────────────────────────── -->
+    <div class="card overflow-hidden">
+      <div class="px-5 py-3.5 border-b border-white/[0.07]">
+        <p class="section-label">Seu pedido</p>
+      </div>
+      <div class="px-5 py-4 space-y-3">
+        {% for item in order.items.all %}
+          <div class="flex items-center gap-3 text-sm">
+            <span class="w-6 h-6 rounded-lg bg-brand/20 text-violet-400 text-xs font-bold flex items-center justify-center flex-shrink-0">
+              {{ item.quantity }}
+            </span>
+            <span class="text-zinc-300 flex-1 min-w-0 truncate">{{ item.product.name }}</span>
+            <span class="text-zinc-600 text-xs flex-shrink-0">R$ {{ item.subtotal|floatformat:2 }}</span>
+          </div>
+        {% endfor %}
+        {% if order.notes %}
+          <div class="flex items-start gap-2 text-xs text-zinc-600 pt-3 border-t border-white/[0.07]">
+            <span class="flex-shrink-0">📝</span>
+            <span class="italic">{{ order.notes }}</span>
+          </div>
+        {% endif %}
+        <div class="flex items-center justify-between pt-3 border-t border-white/[0.07]">
+          <span class="text-sm text-zinc-400">Total</span>
+          <span class="text-sm font-bold text-violet-400">R$ {{ order.total|floatformat:2 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div
+      id="status-toast"
+      role="status"
+      aria-live="polite"
+      class="hidden fixed bottom-6 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-80 card border-brand/30 text-white text-sm font-medium px-5 py-4 z-50 flex items-center gap-3"
+      style="box-shadow: 0 8px 32px rgba(0,0,0,0.45);">
+      <span id="toast-icon" class="text-base flex-shrink-0">🔔</span>
+      <span id="toast-msg">Status atualizado</span>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const STATUS_CONFIG = {
+    pending:   { label: 'Pedido recebido',          icon: '⏳' },
+    preparing: { label: 'Preparando seu pedido...', icon: '👨‍🍳' },
+    ready:     { label: 'Pronto! Retire no balcão', icon: '🔔' },
+    delivered: { label: 'Pedido entregue!',         icon: '✅' },
+  };
+
+  const STEP_STYLES = {
+    pending:   { bg: '#F59E0B', border: '#F59E0B', color: '#000' },
+    preparing: { bg: '#8B5CF6', border: '#8B5CF6', color: '#fff' },
+    ready:     { bg: '#22D3EE', border: '#22D3EE', color: '#000' },
+    delivered: { bg: '#22C55E', border: '#22C55E', color: '#000' },
+  };
+
+  const STEP_ORDER = ['pending', 'preparing', 'ready', 'delivered'];
+  const BASE_STYLE = 'width:2.5rem;height:2.5rem;border-radius:9999px;border-width:2px;border-style:solid;display:flex;align-items:center;justify-content:center;font-size:.875rem;transition:all .3s;';
+
+  const wsDot = document.getElementById('ws-dot');
+  const ws    = new WebSocket(`ws://${window.location.host}/ws/order/{{ order.pk }}/`);
+
+  ws.onopen  = () => {
+    wsDot.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-400 pulse-dot"></span> Ao vivo';
+    wsDot.style.color = '#4ADE80';
+  };
+  ws.onclose = () => {
+    wsDot.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Desconectado';
+    wsDot.style.color = '#F87171';
+  };
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type !== 'order.status') return;
+    updateTimeline(data.status);
+    showToast(data.status);
+  };
+
+  function updateTimeline(status) {
+    const idx = STEP_ORDER.indexOf(status);
+    STEP_ORDER.forEach((step, i) => {
+      const el  = document.getElementById(`step-${step}`);
+      const cfg = STATUS_CONFIG[step];
+      if (!el) return;
+      if (i < idx) {
+        el.style.cssText = BASE_STYLE + 'background:#22C55E;border-color:#22C55E;color:#000;';
+        el.textContent = '✓';
+      } else if (i === idx) {
+        const s = STEP_STYLES[step];
+        el.style.cssText = BASE_STYLE + `background:${s.bg};border-color:${s.border};color:${s.color};`;
+        el.textContent = cfg.icon;
+      } else {
+        el.style.cssText = BASE_STYLE + 'background:transparent;border-color:rgba(255,255,255,0.12);color:#52525B;';
+        el.textContent = '○';
+      }
+    });
+  }
+
+  let toastTimer;
+  function showToast(status) {
+    const cfg   = STATUS_CONFIG[status] || {};
+    const toast = document.getElementById('status-toast');
+    document.getElementById('toast-icon').textContent = cfg.icon  || '🔔';
+    document.getElementById('toast-msg').textContent  = cfg.label || 'Status atualizado';
+    toast.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.add('hidden'), 4000);
+  }
+</script>
 {% endblock %}

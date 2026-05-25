@@ -2,20 +2,22 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Servd{% endblock %}</title>
-    {% tailwind_css %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0F0F11">
+  <title>{% block title %}Servd{% endblock %}</title>
+  {% tailwind_css %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+  <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
 </head>
-<body class="bg-gray-50 text-gray-800">
-
-    {% block content %}
-    {% endblock %}
-
-    {% if debug %}
-        {% load django_browser_reload %}
-        {% django_browser_reload_script %}
-    {% endif %}
-
+<body class="min-h-screen antialiased">
+  {% block content %}{% endblock %}
+  {% if debug %}
+    {% load django_browser_reload %}
+    {% django_browser_reload_script %}
+  {% endif %}
 </body>
 </html>

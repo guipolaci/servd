@@ -5,6 +5,7 @@ from apps.orders.views import (
     order_tracking_view,
     kitchen_view,
     update_order_status_view,
+    order_card_view,
 )
 
 urlpatterns = [
@@ -41,4 +42,10 @@ urlpatterns = [
         update_order_status_view,
         name="update_order_status"
     ),
+
+    path(
+    "kitchen/<slug:slug>/order/<int:order_id>/card/",
+    order_card_view,
+    name="order_card"
+),
 ]

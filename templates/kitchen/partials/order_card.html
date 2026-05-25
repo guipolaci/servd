@@ -1,8 +1,77 @@
-<div>
-    <h2>Pedido #{{ order.pk }} — Mesa {{ order.table.number }}</h2>
-    <p>Status: {{ order.get_status_display }}</p>
+<div
+  id="order-{{ order.pk }}"
+  class="card
+    {% if order.status == 'pending' %}!border-amber-500/25
+    {% elif order.status == 'preparing' %}!border-violet-500/25
+    {% elif order.status == 'ready' %}!border-cyan-400/30
+    {% endif %}">
 
+  <!-- Cabeçalho do card -->
+  <div class="flex items-center justify-between px-4 py-3 border-b border-white/[0.07]">
+    <div class="flex items-center gap-2">
+      <span class="text-sm font-bold text-white">#{{ order.pk }}</span>
+      <span class="text-zinc-700">·</span>
+      <span class="text-xs font-medium text-zinc-400">Mesa {{ order.table.number }}</span>
+    </div>
+    <span class="text-xs text-zinc-600">{{ order.created_at|timesince }} atrás</span>
+  </div>
+
+  <!-- Itens do pedido -->
+  <div class="px-4 py-3 space-y-2.5">
     {% for item in order.items.all %}
-        <p>{{ item.quantity }}x {{ item.product.name }}</p>
+      <div class="flex items-center gap-3">
+        <span
+          class="w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center flex-shrink-0"
+          style="background: rgba(255,255,255,0.08); color: #D4D4D8;">
+          {{ item.quantity }}
+        </span>
+        <span class="text-sm text-zinc-200">{{ item.product.name }}</span>
+      </div>
     {% endfor %}
+
+    {% if order.notes %}
+      <div class="flex items-start gap-2 text-xs text-zinc-600 italic pt-2 border-t border-white/[0.07]">
+        <span class="flex-shrink-0">📝</span>
+        <span>{{ order.notes }}</span>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Ação -->
+  <div class="px-4 pb-4">
+    {% if order.status == 'pending' %}
+      <button
+        hx-post="/kitchen/{{ order.restaurant.slug }}/order/{{ order.pk }}/status/"
+        hx-vals='{"status": "preparing"}'
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        hx-swap="none"
+        aria-label="Iniciar preparo do pedido #{{ order.pk }}"
+        class="w-full h-10 rounded-xl text-sm font-semibold status-pending hover:bg-amber-500/20 transition-colors active:scale-[0.98]">
+        🔥 Preparar
+      </button>
+
+    {% elif order.status == 'preparing' %}
+      <button
+        hx-post="/kitchen/{{ order.restaurant.slug }}/order/{{ order.pk }}/status/"
+        hx-vals='{"status": "ready"}'
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        hx-swap="none"
+        aria-label="Marcar pedido #{{ order.pk }} como pronto"
+        class="btn-primary w-full h-10 rounded-xl text-sm">
+        ✅ Pronto
+      </button>
+
+    {% elif order.status == 'ready' %}
+      <button
+        hx-post="/kitchen/{{ order.restaurant.slug }}/order/{{ order.pk }}/status/"
+        hx-vals='{"status": "delivered"}'
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        hx-swap="none"
+        aria-label="Confirmar entrega do pedido #{{ order.pk }}"
+        class="w-full h-10 rounded-xl text-sm font-semibold status-ready hover:bg-cyan-500/20 transition-colors active:scale-[0.98]">
+        🚀 Entregar
+      </button>
+    {% endif %}
+  </div>
+
 </div>

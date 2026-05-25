@@ -3,24 +3,195 @@
 {% block title %}Cozinha — {{ restaurant.name }}{% endblock %}
 
 {% block content %}
-<h1>Cozinha — {{ restaurant.name }}</h1>
+<div
+  x-data="{ tab: 'pending' }"
+  class="h-screen flex flex-col bg-canvas overflow-hidden">
 
-{% for order in orders %}
-    <div>
-        <h2>Pedido #{{ order.pk }} — Mesa {{ order.table.number }}</h2>
-        <p>Status: {{ order.get_status_display }}</p>
+  <!-- ═══════════════════════════════════════════
+       Header
+  ═══════════════════════════════════════════ -->
+  <header class="h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 bg-surface border-b border-white/10">
+    <div class="flex items-center gap-3">
+      <span class="w-2 h-2 rounded-full bg-success pulse-dot flex-shrink-0"></span>
+      <div>
+        <h1 class="text-sm font-semibold text-white leading-tight">{{ restaurant.name }}</h1>
+        <p class="text-xs text-zinc-600">Painel da Cozinha</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <span id="ws-status" class="flex items-center gap-2 text-xs text-zinc-600">
+        <span class="w-1.5 h-1.5 rounded-full bg-zinc-700"></span>
+        Conectando
+      </span>
+      <form method="POST" action="/auth/logout/">
+        {% csrf_token %}
+        <button
+          type="submit"
+          class="btn-ghost h-8 px-3 text-xs font-medium rounded-lg">
+          Sair
+        </button>
+      </form>
+    </div>
+  </header>
 
-        {% for item in order.items.all %}
-            <p>{{ item.quantity }}x {{ item.product.name }}</p>
+  <!-- ═══════════════════════════════════════════
+       Tabs de status (mobile)
+  ═══════════════════════════════════════════ -->
+  <nav class="md:hidden flex-shrink-0 bg-surface border-b border-white/10" role="tablist">
+    <div class="flex">
+
+      <button
+        role="tab"
+        :aria-selected="tab === 'pending'"
+        @click="tab = 'pending'"
+        class="flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-semibold border-b-2 transition-colors"
+        :class="tab === 'pending' ? 'text-amber-400 border-amber-500' : 'text-zinc-600 border-transparent'">
+        <span class="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0"></span>
+        Pendente
+        <span id="tab-badge-pending" class="w-5 h-5 rounded-full status-pending text-[10px] font-bold flex items-center justify-center">
+          {{ orders|length }}
+        </span>
+      </button>
+
+      <button
+        role="tab"
+        :aria-selected="tab === 'preparing'"
+        @click="tab = 'preparing'"
+        class="flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-semibold border-b-2 transition-colors"
+        :class="tab === 'preparing' ? 'text-violet-400 border-violet-500' : 'text-zinc-600 border-transparent'">
+        <span class="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0"></span>
+        Preparando
+        <span id="tab-badge-preparing" class="w-5 h-5 rounded-full status-preparing text-[10px] font-bold flex items-center justify-center">
+          0
+        </span>
+      </button>
+
+      <button
+        role="tab"
+        :aria-selected="tab === 'ready'"
+        @click="tab = 'ready'"
+        class="flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-semibold border-b-2 transition-colors"
+        :class="tab === 'ready' ? 'text-cyan-400 border-cyan-500' : 'text-zinc-600 border-transparent'">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0"></span>
+        Pronto
+        <span id="tab-badge-ready" class="w-5 h-5 rounded-full status-ready text-[10px] font-bold flex items-center justify-center">
+          0
+        </span>
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════
+       Colunas Kanban
+  ═══════════════════════════════════════════ -->
+  <div class="flex-1 overflow-hidden md:grid md:grid-cols-3 md:divide-x md:divide-white/10">
+
+    <!-- Pendente -->
+    <div
+      :class="tab === 'pending' ? 'flex' : 'hidden md:flex'"
+      class="flex-col min-h-0 bg-canvas">
+      <div class="flex-shrink-0 flex items-center gap-2.5 px-4 sm:px-5 py-3.5 border-b border-white/10">
+        <span class="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0"></span>
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-amber-500">Pendente</h2>
+        <span id="badge-pending" class="ml-auto status-pending text-[11px] font-bold px-2.5 py-0.5 rounded-full">0</span>
+      </div>
+      <div id="col-pending" class="flex-1 overflow-y-auto p-4 space-y-3">
+        {% for order in orders %}
+          {% if order.status == 'pending' %}{% include "kitchen/partials/order_card.html" %}{% endif %}
         {% endfor %}
-
-        {% if order.notes %}
-            <p>Obs: {{ order.notes }}</p>
-        {% endif %}
+      </div>
     </div>
 
-{% empty %}
-    <p>Nenhum pedido ativo no momento.</p>
-{% endfor %}
+    <!-- Preparando -->
+    <div
+      :class="tab === 'preparing' ? 'flex' : 'hidden md:flex'"
+      class="flex-col min-h-0 bg-canvas">
+      <div class="flex-shrink-0 flex items-center gap-2.5 px-4 sm:px-5 py-3.5 border-b border-white/10">
+        <span class="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0"></span>
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-violet-400">Preparando</h2>
+        <span id="badge-preparing" class="ml-auto status-preparing text-[11px] font-bold px-2.5 py-0.5 rounded-full">0</span>
+      </div>
+      <div id="col-preparing" class="flex-1 overflow-y-auto p-4 space-y-3">
+        {% for order in orders %}
+          {% if order.status == 'preparing' %}{% include "kitchen/partials/order_card.html" %}{% endif %}
+        {% endfor %}
+      </div>
+    </div>
 
+    <!-- Pronto -->
+    <div
+      :class="tab === 'ready' ? 'flex' : 'hidden md:flex'"
+      class="flex-col min-h-0 bg-canvas">
+      <div class="flex-shrink-0 flex items-center gap-2.5 px-4 sm:px-5 py-3.5 border-b border-white/10">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 pulse-dot flex-shrink-0"></span>
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-cyan-400">Pronto</h2>
+        <span id="badge-ready" class="ml-auto status-ready text-[11px] font-bold px-2.5 py-0.5 rounded-full">0</span>
+      </div>
+      <div id="col-ready" class="flex-1 overflow-y-auto p-4 space-y-3">
+        {% for order in orders %}
+          {% if order.status == 'ready' %}{% include "kitchen/partials/order_card.html" %}{% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  const slug     = "{{ restaurant.slug }}";
+  const ws       = new WebSocket(`ws://${window.location.host}/ws/kitchen/${slug}/`);
+  const wsStatus = document.getElementById('ws-status');
+
+  ws.onopen  = () => {
+    wsStatus.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot"></span> Ao vivo';
+    wsStatus.style.color = '#4ADE80';
+  };
+  ws.onclose = () => {
+    wsStatus.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Desconectado';
+    wsStatus.style.color = '#F87171';
+  };
+
+  const COL_MAP = { pending: 'col-pending', preparing: 'col-preparing', ready: 'col-ready' };
+
+  ws.onmessage = (e) => {
+    const { type, order_id: orderId, status: newStatus } = JSON.parse(e.data);
+    if (type !== 'order.update') return;
+
+    const existing = document.getElementById(`order-${orderId}`);
+
+    if (newStatus === 'delivered') {
+      existing?.remove();
+      updateBadges();
+      return;
+    }
+
+    const col = document.getElementById(COL_MAP[newStatus]);
+    if (!col) return;
+
+    fetch(`/kitchen/${slug}/order/${orderId}/card/`)
+      .then(r => r.text())
+      .then(html => {
+        existing?.remove();
+        col.insertAdjacentHTML('afterbegin', html);
+        const card = col.firstElementChild;
+        htmx.process(card);
+        card.classList.add('new-card', 'flash-new');
+        updateBadges();
+      });
+  };
+
+  function updateBadges() {
+    for (const [status, colId] of Object.entries(COL_MAP)) {
+      const col   = document.getElementById(colId);
+      const count = col ? col.querySelectorAll('[id^="order-"]').length : 0;
+      document.querySelectorAll(`#badge-${status}, #tab-badge-${status}`).forEach(el => {
+        el.textContent = count;
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', updateBadges);
+</script>
 {% endblock %}

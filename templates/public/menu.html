@@ -3,220 +3,352 @@
 {% block title %}{{ restaurant.name }} — Cardápio{% endblock %}
 
 {% block content %}
+<div x-data="cart()" class="min-h-screen bg-canvas">
 
-<!-- Header -->
-<div class="bg-green-700 text-white sticky top-0 z-10 shadow-md">
-  <div class="max-w-lg mx-auto px-4 py-4">
-    <h1 class="text-2xl font-bold tracking-wide">{{ restaurant.name }}</h1>
-    <p class="text-green-200 text-sm mt-1">Mesa {{ table_number }}</p>
-  </div>
-</div>
+  <!-- ═══════════════════════════════════════════
+       Header sticky
+  ═══════════════════════════════════════════ -->
+  <header class="sticky top-0 z-20 bg-canvas/90 backdrop-blur-xl border-b border-white/10">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6">
 
-<!-- Conteúdo -->
-<div class="max-w-lg mx-auto px-4 py-6 pb-32">
-
-  {% for category in categories %}
-
-    <!-- Título da categoria -->
-    <h2 class="text-lg font-bold text-gray-700 uppercase tracking-wider mb-3 mt-6 border-b border-gray-200 pb-2">
-      {{ category.name }}
-    </h2>
-
-    <!-- Produtos -->
-    {% for product in category.products.all %}
-      {% if product.is_available %}
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-3 flex items-center gap-4 p-4">
-
-        <!-- Emoji placeholder enquanto não tem foto -->
-        <div class="w-16 h-16 rounded-lg bg-green-50 flex items-center justify-center text-3xl flex-shrink-0">
-          🍔
+      <!-- Barra principal -->
+      <div class="flex items-center justify-between gap-4 py-4">
+        <div class="min-w-0">
+          <h1 class="text-base font-bold text-white truncate">{{ restaurant.name }}</h1>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-success pulse-dot flex-shrink-0"></span>
+            <span class="text-xs text-zinc-500 font-medium">Mesa {{ table_number }}</span>
+          </div>
         </div>
 
-        <!-- Info -->
-        <div class="flex-1 min-w-0">
-          <p class="font-semibold text-gray-800 text-sm">{{ product.name }}</p>
-          {% if product.description %}
-            <p class="text-gray-400 text-xs mt-0.5 leading-relaxed truncate">{{ product.description }}</p>
-          {% endif %}
-          <p class="text-green-700 font-bold text-sm mt-1">R$ {{ product.price }}</p>
-        </div>
-
-        <!-- Botão adicionar -->
+        <!-- Botão do carrinho (desktop) -->
         <button
-          type="button"
-          class="w-9 h-9 rounded-full bg-green-700 text-white flex items-center justify-center text-xl font-bold flex-shrink-0 hover:bg-green-600 active:scale-95 transition-all"
-          onclick="addItem({{ product.id }}, '{{ product.name }}', {{ product.price }}, this)">
-          +
+          @click="open = true"
+          x-show="count > 0"
+          x-cloak
+          aria-label="Abrir carrinho"
+          class="hidden sm:flex flex-shrink-0 items-center gap-3 h-10 px-4 rounded-full bg-brand/10 border border-brand/20 text-sm font-medium text-white hover:bg-brand/15 transition-colors">
+          <svg class="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          <span class="text-zinc-400" x-text="totalFormatted"></span>
+          <span class="w-5 h-5 rounded-full bg-brand text-white text-[10px] font-bold flex items-center justify-center" x-text="count"></span>
         </button>
-
       </div>
+
+      <!-- Tabs de categorias -->
+      {% if categories %}
+      <nav aria-label="Categorias" class="overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6">
+        <div class="flex gap-2 px-4 sm:px-6 pb-4 whitespace-nowrap">
+          {% for category in categories %}
+            <a
+              href="#cat-{{ forloop.counter }}"
+              class="inline-block text-xs font-medium px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-500 hover:bg-brand/10 hover:border-brand/20 hover:text-violet-300 transition-colors">
+              {{ category.name }}
+            </a>
+          {% endfor %}
+        </div>
+      </nav>
       {% endif %}
+
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════
+       Cardápio
+  ═══════════════════════════════════════════ -->
+  <main class="max-w-2xl mx-auto px-4 sm:px-6 pt-6 pb-36">
+
+    {% for category in categories %}
+    <section id="cat-{{ forloop.counter }}" class="mb-12">
+
+      <!-- Título da seção -->
+      <div class="flex items-center gap-4 mb-5">
+        <h2 class="section-label flex-shrink-0">{{ category.name }}</h2>
+        <div class="flex-1 h-px bg-white/[0.07]"></div>
+      </div>
+
+      <!-- Lista de produtos -->
+      <div class="space-y-3">
+        {% for product in category.products.all %}
+        {% if product.is_available %}
+        <article class="card-interactive">
+          <div class="flex items-center">
+
+            <!-- Imagem -->
+            <div class="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-white/[0.03] flex items-center justify-center text-3xl sm:text-4xl">
+              🍽️
+            </div>
+
+            <!-- Informações -->
+            <div class="flex-1 min-w-0 px-4 py-4">
+              <div class="flex items-start gap-2 flex-wrap">
+                <p class="text-sm font-semibold text-white leading-snug">{{ product.name }}</p>
+                {% if product.tag == 'hit' %}
+                  <span class="tag-hit flex-shrink-0">🔥 Top</span>
+                {% elif product.tag == 'new' %}
+                  <span class="tag-new flex-shrink-0">✨ Novo</span>
+                {% elif product.tag == 'veg' %}
+                  <span class="tag-veg flex-shrink-0">🌿 Veg</span>
+                {% endif %}
+              </div>
+              {% if product.description %}
+                <p class="text-xs text-zinc-500 mt-1.5 line-clamp-2 leading-relaxed">{{ product.description }}</p>
+              {% endif %}
+              <p class="text-sm font-bold text-violet-400 mt-2">R$ {{ product.price|floatformat:2 }}</p>
+            </div>
+
+            <!-- Controles — largura fixa para evitar layout shift -->
+            <div class="w-20 flex-shrink-0 flex items-center justify-center">
+              <template x-if="!getItem({{ product.id }})">
+                <button
+                  @click="add({{ product.id }}, '{{ product.name|escapejs }}', {{ product.price }})"
+                  aria-label="Adicionar {{ product.name }}"
+                  class="btn-primary w-9 h-9 rounded-full text-lg font-bold">
+                  +
+                </button>
+              </template>
+              <template x-if="getItem({{ product.id }})">
+                <div class="flex items-center gap-1">
+                  <button
+                    @click="remove({{ product.id }})"
+                    aria-label="Remover {{ product.name }}"
+                    class="btn-ghost w-8 h-8 rounded-full text-base font-bold">
+                    −
+                  </button>
+                  <span class="w-6 text-center text-sm font-bold text-white tabular-nums" x-text="getItem({{ product.id }}).qty"></span>
+                  <button
+                    @click="add({{ product.id }}, '{{ product.name|escapejs }}', {{ product.price }})"
+                    aria-label="Adicionar mais {{ product.name }}"
+                    class="btn-primary w-8 h-8 rounded-full text-base font-bold">
+                    +
+                  </button>
+                </div>
+              </template>
+            </div>
+
+          </div>
+        </article>
+        {% endif %}
+        {% endfor %}
+      </div>
+
+    </section>
+    {% empty %}
+    <div class="text-center py-24">
+      <div class="text-5xl mb-4">🍽️</div>
+      <p class="text-lg font-semibold text-white">Cardápio indisponível</p>
+      <p class="text-sm text-zinc-500 mt-2">Tente novamente em breve</p>
+    </div>
     {% endfor %}
 
-  {% empty %}
-    <div class="text-center py-16 text-gray-400">
-      <p class="text-4xl mb-3">🍽️</p>
-      <p>Nenhum item disponível no momento.</p>
-    </div>
-  {% endfor %}
+  </main>
 
-</div>
-
-<!-- Carrinho flutuante -->
-<div id="cart-fab" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-20">
-  <button
-    onclick="openCart()"
-    class="bg-green-700 text-white px-6 py-4 rounded-full shadow-lg flex items-center gap-4 hover:bg-green-600 transition-all">
-    <span class="font-semibold">🛒 Ver Pedido</span>
-    <span id="cart-count" class="bg-yellow-400 text-gray-900 text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">0</span>
-    <span id="cart-total" class="font-bold">R$ 0,00</span>
-  </button>
-</div>
-
-<!-- Modal carrinho -->
-<div id="cart-modal" class="hidden fixed inset-0 z-30 flex items-end justify-center bg-black/50">
-  <div class="bg-white w-full max-w-lg rounded-t-2xl max-h-[85vh] overflow-y-auto">
-
-    <!-- Header modal -->
-    <div class="bg-green-700 text-white px-5 py-4 rounded-t-2xl flex items-center justify-between">
-      <div>
-        <h2 class="text-xl font-bold">Seu Pedido</h2>
-        <p class="text-green-200 text-sm">Mesa {{ table_number }}</p>
+  <!-- ═══════════════════════════════════════════
+       FAB — Botão flutuante do carrinho
+  ═══════════════════════════════════════════ -->
+  <div
+    x-show="count > 0"
+    x-cloak
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0 translate-y-3"
+    x-transition:enter-end="opacity-100 translate-y-0"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="opacity-100 translate-y-0"
+    x-transition:leave-end="opacity-0 translate-y-3"
+    class="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-96 z-30">
+    <button
+      @click="open = true"
+      aria-label="Ver pedido"
+      class="btn-primary w-full h-14 rounded-xl px-5 flex items-center justify-between text-sm">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <span class="font-semibold">Ver Pedido</span>
       </div>
-      <button onclick="closeCart()" class="text-white text-2xl leading-none">✕</button>
+      <div class="flex items-center gap-3">
+        <span class="font-bold" x-text="totalFormatted"></span>
+        <span class="w-6 h-6 rounded-full bg-white/20 text-xs font-bold flex items-center justify-center" x-text="count"></span>
+      </div>
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       Modal — Carrinho
+  ═══════════════════════════════════════════ -->
+  <div
+    x-show="open"
+    x-cloak
+    @keydown.escape.window="open = false"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Seu pedido"
+    class="fixed inset-0 z-40 flex items-end sm:items-center justify-center">
+
+    <!-- Overlay -->
+    <div
+      @click="open = false"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition ease-in duration-150"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+      class="absolute inset-0 bg-black/65 backdrop-blur-sm">
     </div>
 
-    <!-- Itens -->
-    <div id="cart-items" class="px-5 py-4"></div>
+    <!-- Sheet -->
+    <div
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-start="opacity-0 translate-y-6"
+      x-transition:enter-end="opacity-100 translate-y-0"
+      x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-start="opacity-100 translate-y-0"
+      x-transition:leave-end="opacity-0 translate-y-6"
+      class="relative w-full max-h-[90vh] flex flex-col bg-raised border border-white/10 rounded-t-2xl sm:rounded-2xl sm:max-w-lg"
+      style="box-shadow: 0 -16px 48px rgba(0,0,0,0.45);">
 
-    <!-- Observações + total + botão -->
-    <div id="cart-footer" class="px-5 pb-6"></div>
+      <!-- Handle (mobile) -->
+      <div class="sm:hidden flex justify-center pt-3 pb-2 flex-shrink-0">
+        <div class="w-8 h-1 rounded-full bg-white/15"></div>
+      </div>
 
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] flex-shrink-0">
+        <div>
+          <h2 class="text-base font-semibold text-white">Seu Pedido</h2>
+          <p class="text-xs text-zinc-500 mt-0.5">Mesa {{ table_number }} · {{ restaurant.name }}</p>
+        </div>
+        <button
+          @click="open = false"
+          aria-label="Fechar carrinho"
+          class="btn-ghost w-8 h-8 rounded-lg text-sm flex-shrink-0">
+          ✕
+        </button>
+      </div>
+
+      <!-- Lista de itens -->
+      <div class="flex-1 overflow-y-auto">
+        <template x-if="items.length === 0">
+          <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div class="text-4xl mb-3">🛒</div>
+            <p class="font-medium text-white">Carrinho vazio</p>
+            <p class="text-sm text-zinc-500 mt-1">Adicione itens do cardápio</p>
+          </div>
+        </template>
+        <template x-for="item in items" :key="item.id">
+          <div class="flex items-center gap-4 px-6 py-4 border-b border-white/[0.06]">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-white leading-tight" x-text="item.name"></p>
+              <p class="text-sm font-bold text-violet-400 mt-1"
+                 x-text="'R$ ' + (item.price * item.qty).toFixed(2).replace('.', ',')"></p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button
+                @click="remove(item.id)"
+                :aria-label="'Remover um ' + item.name"
+                class="btn-ghost w-8 h-8 rounded-lg text-sm font-bold">
+                −
+              </button>
+              <span class="w-6 text-center text-sm font-bold text-white tabular-nums" x-text="item.qty"></span>
+              <button
+                @click="add(item.id, item.name, item.price)"
+                :aria-label="'Adicionar mais ' + item.name"
+                class="btn-primary w-8 h-8 rounded-lg text-sm font-bold">
+                +
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Footer -->
+      <div x-show="items.length > 0" class="px-6 pt-5 pb-6 border-t border-white/[0.08] flex-shrink-0 space-y-4">
+        <textarea
+          x-model="notes"
+          placeholder="Observações: sem cebola, bem passado..."
+          rows="2"
+          class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-all resize-none"
+        ></textarea>
+
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-zinc-400">Total do pedido</span>
+          <span class="text-lg font-bold text-violet-400" x-text="totalFormatted"></span>
+        </div>
+
+        <button
+          @click="placeOrder()"
+          :disabled="loading"
+          class="btn-primary w-full h-12 text-sm gap-2">
+          <span x-show="!loading">🚀 Enviar para a Cozinha</span>
+          <span x-show="loading" class="flex items-center gap-2">
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Enviando...
+          </span>
+        </button>
+
+        <p class="text-center text-xs text-zinc-700">Pedido direto para a cozinha ✅</p>
+      </div>
+
+    </div>
   </div>
+
 </div>
 
 <script>
-  // Estado do carrinho em memória
-  let cart = {};
+function cart() {
+  return {
+    cart: {},
+    open: false,
+    notes: '',
+    loading: false,
 
-function addItem(id, name, price, btn) {
-    if (cart[id]) {
-        cart[id].qty += 1;
-    } else {
-        cart[id] = { id, name, price, qty: 1 };
-    }
-    updateFab();
+    get items()          { return Object.values(this.cart); },
+    get count()          { return this.items.reduce((s, i) => s + i.qty, 0); },
+    get total()          { return this.items.reduce((s, i) => s + i.price * i.qty, 0); },
+    get totalFormatted() { return 'R$ ' + this.total.toFixed(2).replace('.', ','); },
 
-    // Feedback visual
-    btn.textContent = "✓";
-    btn.classList.add("bg-green-500");
-    setTimeout(() => {
-        btn.textContent = "+";
-        btn.classList.remove("bg-green-500");
-    }, 800);
+    getItem(id) { return this.cart[id] || null; },
+
+    add(id, name, price) {
+      if (this.cart[id]) this.cart[id].qty += 1;
+      else this.cart[id] = { id, name, price, qty: 1 };
+      this.cart = { ...this.cart };
+    },
+
+    remove(id) {
+      if (!this.cart[id]) return;
+      this.cart[id].qty -= 1;
+      if (this.cart[id].qty <= 0) delete this.cart[id];
+      this.cart = { ...this.cart };
+    },
+
+    async placeOrder() {
+      if (this.loading || this.items.length === 0) return;
+      this.loading = true;
+      const payload = {
+        items: this.items.map(i => ({ product_id: i.id, quantity: i.qty, notes: '', extras: [] })),
+        notes: this.notes,
+      };
+      try {
+        const res = await fetch('/{{ restaurant.slug }}/table/{{ table_number }}/order/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const html = await res.text();
+          document.open(); document.write(html); document.close();
+        }
+      } finally {
+        this.loading = false;
+      }
+    },
+  };
 }
-
-  function updateFab() {
-    const items = Object.values(cart);
-    const count = items.reduce((s, i) => s + i.qty, 0);
-    const total = items.reduce((s, i) => s + i.price * i.qty, 0);
-
-    document.getElementById("cart-count").textContent = count;
-    document.getElementById("cart-total").textContent = "R$ " + total.toFixed(2).replace(".", ",");
-    document.getElementById("cart-fab").classList.toggle("hidden", count === 0);
-  }
-
-  function openCart() {
-    renderCartItems();
-    document.getElementById("cart-modal").classList.remove("hidden");
-  }
-
-  function closeCart() {
-    document.getElementById("cart-modal").classList.add("hidden");
-  }
-
-  function changeQty(id, delta) {
-    if (!cart[id]) return;
-    cart[id].qty += delta;
-    if (cart[id].qty <= 0) delete cart[id];
-    updateFab();
-    renderCartItems();
-  }
-
-  function renderCartItems() {
-    const items = Object.values(cart);
-    const itemsEl = document.getElementById("cart-items");
-    const footerEl = document.getElementById("cart-footer");
-
-    if (items.length === 0) {
-      itemsEl.innerHTML = `
-        <div class="text-center py-10 text-gray-400">
-          <p class="text-4xl mb-2">🛒</p>
-          <p>Seu carrinho está vazio.</p>
-        </div>`;
-      footerEl.innerHTML = "";
-      return;
-    }
-
-    const total = items.reduce((s, i) => s + i.price * i.qty, 0);
-
-    itemsEl.innerHTML = items.map(item => `
-      <div class="flex items-center gap-3 py-3 border-b border-gray-100">
-        <div class="flex-1">
-          <p class="font-semibold text-sm text-gray-800">${item.name}</p>
-          <p class="text-green-700 text-sm font-bold">R$ ${(item.price * item.qty).toFixed(2).replace(".", ",")}</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="changeQty(${item.id}, -1)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-700 font-bold hover:bg-gray-200">−</button>
-          <span class="text-sm font-bold w-4 text-center">${item.qty}</span>
-          <button onclick="changeQty(${item.id}, 1)" class="w-7 h-7 rounded-full bg-gray-100 text-gray-700 font-bold hover:bg-gray-200">+</button>
-        </div>
-      </div>
-    `).join("");
-
-    footerEl.innerHTML = `
-      <textarea
-        id="order-notes"
-        placeholder="Alguma observação? Ex: sem cebola, bem passado..."
-        class="w-full mt-4 p-3 border border-gray-200 rounded-xl text-sm resize-none h-20 focus:outline-none focus:border-green-500">
-      </textarea>
-      <div class="flex justify-between items-center mt-4 mb-4">
-        <span class="text-gray-500 text-sm">Total</span>
-        <span class="text-green-700 font-bold text-xl">R$ ${total.toFixed(2).replace(".", ",")}</span>
-      </div>
-      <button
-        onclick="placeOrder()"
-        class="w-full bg-orange-500 hover:bg-orange-400 text-white font-bold py-4 rounded-xl text-lg transition-all active:scale-95">
-        🚀 Enviar Pedido para a Cozinha
-      </button>
-      <p class="text-center text-gray-400 text-xs mt-3">Seu pedido vai direto para a cozinha ✅</p>
-    `;
-  }
-
-  async function placeOrder() {
-    const items = Object.values(cart).map(i => ({
-      product_id: i.id,
-      quantity: i.qty,
-      notes: "",
-      extras: []
-    }));
-
-    const notes = document.getElementById("order-notes")?.value || "";
-
-    const response = await fetch("/{{ restaurant.slug }}/table/{{ table_number }}/order/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
-      },
-      body: JSON.stringify({ items, notes }),
-    });
-
-    if (response.ok) {
-      const html = await response.text();
-      document.body.innerHTML = html;
-    }
-  }
 </script>
-
 {% endblock %}

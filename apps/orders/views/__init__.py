@@ -1,6 +1,6 @@
 import json
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import HttpResponse
 from django.views.decorators.http import require_POST
 from apps.menu.selectors import get_menu
 from apps.orders.selectors import get_active_orders, get_order_by_id
@@ -89,19 +89,25 @@ def kitchen_view(request, slug):
 @require_POST
 @kitchen_required
 def update_order_status_view(request, slug, order_id):
-    """
-    Cozinha avança o status do pedido.
-    Retorna um fragmento HTML que o HTMX troca na página
-    sem precisar recarregar tudo.
-    """
-    data = json.loads(request.body)
+    new_status = request.POST.get("status")
 
-    order = update_order_status(
+    update_order_status(
         restaurant=request.restaurant,
         order_id=order_id,
-        new_status=data["status"],
+        new_status=new_status,
     )
 
+    # A UI é atualizada pelo evento WebSocket disparado em update_order_status.
+    # Retornar HTML aqui causaria duplicação (dois caminhos: HTTP e WS).
+    return HttpResponse(status=204)
+
+def order_card_view(request, slug, order_id):
+    """
+    Retorna o card HTML de um pedido específico.
+    Usado pelo HTMX no painel da cozinha para atualizar
+    um card individualmente via WebSocket.
+    """
+    order = get_order_by_id(request.restaurant, order_id)
     return render(request, "kitchen/partials/order_card.html", {
         "order": order,
     })

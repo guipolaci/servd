@@ -1,11 +1,67 @@
 {% extends "base.html" %}
 
-{% block title %}Pedido confirmado{% endblock %}
+{% block title %}Pedido confirmado — {{ restaurant.name }}{% endblock %}
 
 {% block content %}
-<h1>Pedido #{{ order.pk }} confirmado!</h1>
-<p>Restaurante: {{ restaurant.name }}</p>
-<p>Mesa: {{ order.table.number }}</p>
-<p>Total: R$ {{ order.total }}</p>
-<p>Status: {{ order.get_status_display }}</p>
+<div class="min-h-screen bg-canvas flex items-center justify-center px-4 py-16">
+  <div class="w-full max-w-sm space-y-5">
+
+    <!-- Ícone -->
+    <div class="text-center pb-2">
+      <div class="w-20 h-20 bg-brand/10 border border-brand/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <span class="text-4xl animate-bounce" role="img" aria-label="Pedido confirmado">🚀</span>
+      </div>
+      <h1 class="text-xl font-bold text-white">Pedido confirmado!</h1>
+      <p class="text-sm text-zinc-500 mt-2">Sua comida está a caminho da cozinha</p>
+    </div>
+
+    <!-- Cabeçalho do pedido -->
+    <div class="card">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/[0.07]">
+        <span class="text-xs font-medium text-zinc-500">Número do Pedido</span>
+        <span class="text-xl font-bold text-white">#{{ order.pk }}</span>
+      </div>
+      <div class="px-5 py-4 space-y-3">
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-zinc-500">Restaurante</span>
+          <span class="font-medium text-white">{{ restaurant.name }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-zinc-500">Mesa</span>
+          <span class="font-medium text-white">{{ order.table.number }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm pt-3 border-t border-white/[0.07]">
+          <span class="text-zinc-500">Total</span>
+          <span class="font-bold text-violet-400">R$ {{ order.total|floatformat:2 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Itens -->
+    <div class="card px-5 py-4 space-y-4">
+      <p class="section-label">Itens</p>
+      <div class="space-y-3">
+        {% for item in order.items.all %}
+          <div class="flex items-center gap-3 text-sm">
+            <span class="w-6 h-6 rounded-lg bg-brand/20 text-violet-400 text-xs font-bold flex items-center justify-center flex-shrink-0">
+              {{ item.quantity }}
+            </span>
+            <span class="text-zinc-300 flex-1 min-w-0 truncate">{{ item.product.name }}</span>
+            <span class="text-zinc-600 text-xs flex-shrink-0">R$ {{ item.subtotal|floatformat:2 }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <a
+      href="/{{ restaurant.slug }}/order/{{ order.pk }}/"
+      class="btn-primary flex h-12 rounded-xl text-sm">
+      Acompanhar meu pedido →
+    </a>
+
+    <p class="text-center text-xs text-zinc-700">{{ restaurant.name }}</p>
+
+  </div>
+</div>
 {% endblock %}
