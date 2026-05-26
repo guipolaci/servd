@@ -1,0 +1,65 @@
+{% extends "panel/base.html" %}
+
+{% block title %}Dashboard — {{ restaurant.name }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Bem vindo ao painel da {{ restaurant.name }}{% endblock %}
+
+{% block panel_content %}
+
+<!-- Cards de resumo -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+  <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <p class="text-sm text-gray-500 font-medium">Pedidos hoje</p>
+    <p class="text-3xl font-bold text-gray-800 mt-1">—</p>
+    <p class="text-xs text-gray-400 mt-1">Em breve</p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <p class="text-sm text-gray-500 font-medium">Faturamento hoje</p>
+    <p class="text-3xl font-bold text-gray-800 mt-1">—</p>
+    <p class="text-xs text-gray-400 mt-1">Em breve</p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <p class="text-sm text-gray-500 font-medium">Produto mais pedido</p>
+    <p class="text-3xl font-bold text-gray-800 mt-1">—</p>
+    <p class="text-xs text-gray-400 mt-1">Em breve</p>
+  </div>
+
+</div>
+
+<!-- Atalhos -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+  <a href="{% url 'panel_menu' restaurant.slug %}"
+     class="bg-white rounded-xl border border-gray-200 p-6 hover:border-green-400 hover:shadow-sm transition-all">
+    <div class="text-2xl mb-2">🍔</div>
+    <h3 class="font-semibold text-gray-800">Gerenciar Cardápio</h3>
+    <p class="text-sm text-gray-400 mt-1">Adicionar, editar ou remover produtos</p>
+  </a>
+
+  <a href="/panel/{{ restaurant.slug }}/tables/"
+     class="bg-white rounded-xl border border-gray-200 p-6 hover:border-green-400 hover:shadow-sm transition-all">
+    <div class="text-2xl mb-2">🪑</div>
+    <h3 class="font-semibold text-gray-800">Gerenciar Mesas</h3>
+    <p class="text-sm text-gray-400 mt-1">Criar mesas e baixar QR Codes</p>
+  </a>
+
+  <a href="/panel/{{ restaurant.slug }}/orders/"
+     class="bg-white rounded-xl border border-gray-200 p-6 hover:border-green-400 hover:shadow-sm transition-all">
+    <div class="text-2xl mb-2">📋</div>
+    <h3 class="font-semibold text-gray-800">Ver Pedidos</h3>
+    <p class="text-sm text-gray-400 mt-1">Histórico completo de pedidos</p>
+  </a>
+
+  <a href="/panel/{{ restaurant.slug }}/team/"
+     class="bg-white rounded-xl border border-gray-200 p-6 hover:border-green-400 hover:shadow-sm transition-all">
+    <div class="text-2xl mb-2">👥</div>
+    <h3 class="font-semibold text-gray-800">Gerenciar Equipe</h3>
+    <p class="text-sm text-gray-400 mt-1">Cadastrar cozinheiros e gerentes</p>
+  </a>
+
+</div>
+
+{% endblock %}

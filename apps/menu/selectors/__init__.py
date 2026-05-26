@@ -1,3 +1,5 @@
+from django.shortcuts import get_object_or_404
+
 from apps.menu.models import Category, Product
 from apps.accounts.models import Restaurant
 
@@ -30,3 +32,19 @@ def get_product_by_id(restaurant: Restaurant, product_id: int) -> Product:
         restaurant=restaurant,
         is_available=True
     )
+
+
+def get_categories_panel(restaurant: Restaurant):
+    """
+    Retorna todas as categorias do restaurante para o painel administrativo.
+    Diferente do get_menu, inclui categorias inativas — o gestor precisa vê-las.
+    """
+    return Category.objects.filter(restaurant=restaurant).order_by("sort_order", "name")
+
+
+def get_product_panel(restaurant: Restaurant, product_id: int) -> Product:
+    """
+    Retorna um produto para o painel administrativo, escopado ao tenant.
+    Não filtra por is_available — gestor pode editar produtos indisponíveis.
+    """
+    return get_object_or_404(Product, pk=product_id, restaurant=restaurant)
