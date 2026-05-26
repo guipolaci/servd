@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
-
+from django.contrib import messages
+from apps.orders.models import Table
+from apps.orders.services import create_table, delete_table
 from apps.accounts.decorators import panel_required
 from apps.menu.selectors import get_categories_panel, get_product_panel
 from apps.menu.services import (
@@ -135,3 +137,56 @@ def category_create_view(request, slug):
         "restaurant": request.restaurant,
         "active": "menu",
     })
+
+@panel_required
+def tables_list_view(request, slug):
+    """
+    Lista todas as mesas do restaurante.
+    """
+    tables = Table.objects.filter(
+        restaurant=request.restaurant
+    ).order_by("number")
+
+    return render(request, "panel/tables/list.html", {
+        "restaurant": request.restaurant,
+        "tables": tables,
+        "active": "tables",
+    })
+
+
+@panel_required
+def table_create_view(request, slug):
+    """
+    GET  → exibe formulário
+    POST → cria a mesa e gera QR Code
+    """
+    if request.method == "POST":
+        try:
+            number = int(request.POST.get("number", 0))
+            create_table(request.restaurant, number)
+            messages.success(request, f"Mesa {number} criada com sucesso!")
+            return redirect("panel_tables", slug=slug)
+        except ValueError as e:
+            messages.error(request, str(e))
+        except Exception:
+            messages.error(request, "Erro ao criar mesa. Tente novamente.")
+
+    return render(request, "panel/tables/form.html", {
+        "restaurant": request.restaurant,
+        "active": "tables",
+    })
+
+
+@panel_required
+def table_delete_view(request, slug, table_id):
+    """
+    Deleta uma mesa.
+    """
+    if request.method == "POST":
+        try:
+            delete_table(request.restaurant, table_id)
+            messages.success(request, "Mesa removida com sucesso!")
+        except Exception:
+            messages.error(request, "Erro ao remover mesa.")
+
+    return redirect("panel_tables", slug=slug)

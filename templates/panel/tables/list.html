@@ -1,0 +1,74 @@
+{% extends "panel/base.html" %}
+
+{% block title %}Mesas — {{ restaurant.name }}{% endblock %}
+{% block page_title %}Mesas{% endblock %}
+{% block page_subtitle %}Gerencie as mesas e baixe os QR Codes para impressão{% endblock %}
+
+{% block panel_content %}
+
+<!-- Ação -->
+<div class="mb-6">
+  <a href="{% url 'panel_table_create' restaurant.slug %}"
+     class="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all">
+    + Nova Mesa
+  </a>
+</div>
+
+<!-- Grid de mesas -->
+{% if tables %}
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  {% for table in tables %}
+  <div class="bg-white rounded-xl border border-gray-200 p-5 flex flex-col items-center text-center hover:shadow-sm transition-all">
+
+    <!-- QR Code -->
+    {% if table.qr_code %}
+      <img src="{{ table.qr_code.url }}"
+           class="w-32 h-32 mb-3 rounded-lg border border-gray-100"
+           alt="QR Code Mesa {{ table.number }}">
+    {% else %}
+      <div class="w-32 h-32 mb-3 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+        Sem QR Code
+      </div>
+    {% endif %}
+
+    <!-- Número -->
+    <p class="font-bold text-gray-800 text-lg">Mesa {{ table.number }}</p>
+
+    <!-- Status -->
+    <span class="text-xs px-2 py-0.5 rounded-full mt-1
+      {% if table.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">
+      {% if table.is_active %}Ativa{% else %}Inativa{% endif %}
+    </span>
+
+    <!-- Ações -->
+    <div class="flex gap-2 mt-4 w-full">
+      {% if table.qr_code %}
+        <a href="{{ table.qr_code.url }}" download="qr_mesa_{{ table.number }}.png"
+           class="flex-1 text-xs py-1.5 rounded-lg border border-green-200 text-green-700 hover:bg-green-50 transition-colors text-center font-medium">
+          ⬇ Baixar
+        </a>
+      {% endif %}
+      <form method="POST" action="{% url 'panel_table_delete' restaurant.slug table.pk %}"
+            onsubmit="return confirm('Remover Mesa {{ table.number }}?')"
+            class="flex-1">
+        {% csrf_token %}
+        <button type="submit"
+                class="w-full text-xs py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors font-medium">
+          Remover
+        </button>
+      </form>
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+  <div class="text-center py-16 text-gray-400">
+    <p class="text-4xl mb-3">🪑</p>
+    <p class="font-medium">Nenhuma mesa cadastrada ainda.</p>
+    <p class="text-sm mt-1">Crie mesas para gerar os QR Codes.</p>
+  </div>
+{% endif %}
+
+{% endblock %}

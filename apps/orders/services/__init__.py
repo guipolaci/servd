@@ -106,3 +106,34 @@ def update_order_status(
     order.save(update_fields=["status", "updated_at"])
 
     return order
+
+def create_table(restaurant, number: int):
+    """
+    Cria uma mesa e gera o QR Code automaticamente.
+    Valida que o número da mesa não está duplicado.
+    """
+    from apps.orders.models import Table
+
+    if not number or number <= 0:
+        raise ValueError("Número da mesa inválido.")
+
+    if Table.objects.filter(restaurant=restaurant, number=number).exists():
+        raise ValueError(f"Mesa {number} já existe neste restaurante.")
+
+    # O QR Code é gerado no save() do model
+    return Table.objects.create(
+        restaurant=restaurant,
+        number=number,
+        is_active=True,
+    )
+
+
+def delete_table(restaurant, table_id: int):
+    """
+    Deleta uma mesa escopada ao tenant.
+    """
+    from django.shortcuts import get_object_or_404
+    from apps.orders.models import Table
+
+    table = get_object_or_404(Table, pk=table_id, restaurant=restaurant)
+    table.delete()
