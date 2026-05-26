@@ -35,11 +35,11 @@ class KitchenConsumer(AsyncWebsocketConsumer):
     async def order_update(self, event):
         """
         Chamado quando o channel_layer.group_send envia
-        um evento do tipo "order.update" para esse grupo.
+        um evento do tipo "orders.update" para esse grupo.
         Repassa o evento para o browser via WebSocket.
         """
         await self.send(text_data=json.dumps({
-            "type": "order.update",
+            "type": "orders.update",
             "order_id": event["order_id"],
             "status": event["status"],
         }))
@@ -73,6 +73,6 @@ class OrderStatusConsumer(AsyncWebsocketConsumer):
         Notifica o cliente em tempo real.
         """
         await self.send(text_data=json.dumps({
-            "type": "order.status",
+            "type": "orders.status",
             "status": event["status"],
         }))

@@ -33,7 +33,7 @@ def _notify_kitchen(order: Order) -> None:
     async_to_sync(channel_layer.group_send)(
         f"kitchen_{order.restaurant.slug}",
         {
-            "type": "order.update",
+            "type": "orders.update",
             "order_id": order.pk,
             "status": order.status,
         },
@@ -48,7 +48,7 @@ def _notify_customer(order: Order) -> None:
     async_to_sync(channel_layer.group_send)(
         f"order_{order.pk}",
         {
-            "type": "order.status",
+            "type": "orders.status",
             "status": order.status,
         },
     )

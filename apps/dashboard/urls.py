@@ -9,6 +9,7 @@ from apps.dashboard.views import (
     tables_list_view,
     table_create_view,
     table_delete_view,
+    orders_list_view,
 )
 
 urlpatterns = [
@@ -21,4 +22,5 @@ urlpatterns = [
     path("<slug:slug>/tables/", tables_list_view, name="panel_tables"),
     path("<slug:slug>/tables/create/", table_create_view, name="panel_table_create"),
     path("<slug:slug>/tables/<int:table_id>/delete/", table_delete_view, name="panel_table_delete"),
+    path("<slug:slug>/orders/", orders_list_view, name="panel_orders"),
 ]

@@ -50,7 +50,7 @@ def place_order_view(request, slug, table_number):
     )
 
     return render(request, "public/order_confirmation.html", {
-        "order": order,
+        "orders": order,
         "restaurant": request.restaurant,
     })
 
@@ -63,7 +63,7 @@ def order_tracking_view(request, slug, order_id):
     order = get_order_by_id(request.restaurant, order_id)
 
     return render(request, "public/order_tracking.html", {
-        "order": order,
+        "orders": order,
         "restaurant": request.restaurant,
     })
 
@@ -109,5 +109,5 @@ def order_card_view(request, slug, order_id):
     """
     order = get_order_by_id(request.restaurant, order_id)
     return render(request, "kitchen/partials/order_card.html", {
-        "order": order,
+        "orders": order,
     })

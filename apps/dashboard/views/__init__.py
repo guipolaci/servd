@@ -6,6 +6,7 @@ from apps.orders.models import Table
 from apps.orders.services import create_table, delete_table
 from apps.accounts.decorators import panel_required
 from apps.menu.selectors import get_categories_panel, get_product_panel
+from apps.orders.models import Order
 from apps.menu.services import (
     create_product,
     update_product,
@@ -190,3 +191,27 @@ def table_delete_view(request, slug, table_id):
             messages.error(request, "Erro ao remover mesa.")
 
     return redirect("panel_tables", slug=slug)
+
+@panel_required
+def orders_list_view(request, slug):
+    """
+    Histórico completo de pedidos do restaurante.
+    Filtro por status via query string: ?status=pending
+    """
+    status_filter = request.GET.get("status", "")
+
+    orders = Order.objects.filter(
+        restaurant=request.restaurant
+    ).select_related("table").prefetch_related(
+        "items__product"
+    ).order_by("-created_at")
+
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+
+    return render(request, "panel/orders/list.html", {
+        "restaurant": request.restaurant,
+        "orders": orders,
+        "status_filter": status_filter,
+        "active": "orders",
+    })

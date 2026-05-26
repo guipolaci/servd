@@ -18,13 +18,13 @@ urlpatterns = [
     ),
     # Cliente confirma o pedido
     path(
-        "<slug:slug>/table/<int:table_number>/order/",
+        "<slug:slug>/table/<int:table_number>/orders/",
         place_order_view,
         name="place_order"
     ),
     # Cliente acompanha o status do pedido
     path(
-        "<slug:slug>/order/<int:order_id>/",
+        "<slug:slug>/orders/<int:order_id>/",
         order_tracking_view,
         name="order_tracking"
     ),
@@ -38,13 +38,13 @@ urlpatterns = [
     ),
     # Cozinha atualiza o status do pedido
     path(
-        "kitchen/<slug:slug>/order/<int:order_id>/status/",
+        "kitchen/<slug:slug>/orders/<int:order_id>/status/",
         update_order_status_view,
         name="update_order_status"
     ),
 
     path(
-    "kitchen/<slug:slug>/order/<int:order_id>/card/",
+    "kitchen/<slug:slug>/orders/<int:order_id>/card/",
     order_card_view,
     name="order_card"
 ),

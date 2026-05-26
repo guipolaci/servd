@@ -11,7 +11,7 @@ websocket_urlpatterns = [
     ),
     # Cliente conecta aqui para acompanhar o status do pedido
     re_path(
-        r"ws/order/(?P<order_id>\d+)/$",
+        r"ws/orders/(?P<order_id>\d+)/$",
         OrderStatusConsumer.as_asgi()
     ),
 ]
