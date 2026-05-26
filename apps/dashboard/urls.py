@@ -10,6 +10,9 @@ from apps.dashboard.views import (
     table_create_view,
     table_delete_view,
     orders_list_view,
+    team_list_view,
+    team_member_create_view,
+    team_member_delete_view,
 )
 
 urlpatterns = [
@@ -23,4 +26,7 @@ urlpatterns = [
     path("<slug:slug>/tables/create/", table_create_view, name="panel_table_create"),
     path("<slug:slug>/tables/<int:table_id>/delete/", table_delete_view, name="panel_table_delete"),
     path("<slug:slug>/orders/", orders_list_view, name="panel_orders"),
+    path("<slug:slug>/team/", team_list_view, name="panel_team"),
+    path("<slug:slug>/team/create/", team_member_create_view, name="panel_team_create"),
+    path("<slug:slug>/team/<int:user_id>/delete/", team_member_delete_view, name="panel_team_delete"),
 ]

@@ -7,6 +7,7 @@ from apps.orders.services import create_table, delete_table
 from apps.accounts.decorators import panel_required
 from apps.menu.selectors import get_categories_panel, get_product_panel
 from apps.orders.models import Order
+from apps.accounts.models import User
 from apps.menu.services import (
     create_product,
     update_product,
@@ -215,3 +216,91 @@ def orders_list_view(request, slug):
         "status_filter": status_filter,
         "active": "orders",
     })
+
+@panel_required
+def team_list_view(request, slug):
+    """
+    Lista todos os membros da equipe do restaurante.
+    """
+    members = User.objects.filter(
+        restaurant=request.restaurant
+    ).exclude(
+        role="superadmin"
+    ).order_by("role", "email")
+
+    return render(request, "panel/team/list.html", {
+        "restaurant": request.restaurant,
+        "members": members,
+        "active": "team",
+    })
+
+
+@panel_required
+def team_member_create_view(request, slug):
+    """
+    GET  → exibe formulário
+    POST → cria o usuário com role kitchen ou manager
+    """
+    if request.method == "POST":
+        try:
+            email = request.POST.get("email", "").strip()
+            name = request.POST.get("name", "").strip()
+            role = request.POST.get("role", "kitchen")
+            password = request.POST.get("password", "").strip()
+
+            if not email or not name or not password:
+                raise ValueError("Todos os campos são obrigatórios.")
+
+            if role not in ["kitchen", "manager"]:
+                raise ValueError("Role inválido.")
+
+            if User.objects.filter(email=email).exists():
+                raise ValueError("Já existe um usuário com esse email.")
+
+            User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                first_name=name,
+                role=role,
+                restaurant=request.restaurant,
+            )
+
+            messages.success(request, f"Usuário {name} criado com sucesso!")
+            return redirect("panel_team", slug=slug)
+
+        except ValueError as e:
+            messages.error(request, str(e))
+
+    return render(request, "panel/team/form.html", {
+        "restaurant": request.restaurant,
+        "active": "team",
+    })
+
+
+@panel_required
+def team_member_delete_view(request, slug, user_id):
+    """
+    Remove um membro da equipe.
+    Não permite remover o próprio usuário logado.
+    """
+    if request.method == "POST":
+        try:
+            from django.shortcuts import get_object_or_404
+            member = get_object_or_404(
+                User,
+                pk=user_id,
+                restaurant=request.restaurant
+            )
+
+            if member == request.user:
+                messages.error(request, "Você não pode remover sua própria conta.")
+            else:
+                name = member.first_name or member.email
+                member.delete()
+                messages.success(request, f"Usuário {name} removido.")
+
+        except Exception:
+            messages.error(request, "Erro ao remover usuário.")
+
+    return redirect("panel_team", slug=slug)
